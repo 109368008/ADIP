@@ -449,6 +449,51 @@ string Homofilter(Mat inputMat1, Mat inputMat2, double rL, double rH, double c, 
   imwrite(name, outputMat1);
   return para;
 }
+void BandRejectFilter(Mat inputMat1, Mat inputMat2,int d0,int w)
+{
+  string outputfilepath = "../data/output/";
+  string name;
+  string F;
+  int M = inputMat1.rows;
+  int N = inputMat1.cols;
+  Mat outputMat1(M, N, CV_64FC1);
+  Mat display1(M, N, CV_8UC1);
+  complex<double> B = 0;
+
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
+      double dis = sqrt(pow(u - (M / 2.0), 2) + pow(v - (N / 2.0), 2)); //,pow(u-(M/2.0),2)+pow(v-(N/2.0),2)
+      if(dis<d0-(w/2.0))
+      {
+        B=1;
+      }
+      else if((d0-(w/2.0))<=dis && dis<=(d0+(w/2.0)))
+      {
+        B=0;
+        printf("%f\n",B.real());
+      }
+      else if(dis>d0+(w/2.0))
+      {
+        B=1;
+      }
+      temp = temp * B;
+      display1.at<uchar>(u, v) = B.real() * 255;
+      inputMat1.at<double>(u, v) = temp.real();
+      inputMat2.at<double>(u, v) = temp.imag();
+      outputMat1.at<double>(u, v) = sqrt(pow(temp.real(), 2) + pow(temp.imag(), 2));
+    }
+  }
+  powerLaw(outputMat1, 0.3);
+  outputMat1.convertTo(outputMat1, CV_8UC1, 255, 0);
+  name = outputfilepath + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_filter.png";
+  imwrite(name, display1);
+  name = outputfilepath + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_Magt.png";
+  imwrite(name, outputMat1);
+}
+
 //主程式開始
 int main()
 {
@@ -514,6 +559,7 @@ int main()
       // DFT_Real.at<double>(175,242)=0;
       // DFT_Imag.at<double>(340,274)=0;
       // DFT_Imag.at<double>(175,242)=0;
+      BandRejectFilter(DFT_Real,DFT_Imag,83,7);
       IDFT_TRANS(DFT_Real,DFT_Imag,test,inputstring);
       imshow("temp",temp);
       imshow("test",test);
