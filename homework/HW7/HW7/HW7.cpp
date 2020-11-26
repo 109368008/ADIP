@@ -12,15 +12,6 @@
 using namespace cv;
 using namespace std;
 
-// complex<double> DFTcompute(Mat inputMat1,int x,int y,float v,int N)
-// {
-//   complex<double> data=0;
-//   complex<double> temp = inputMat1.at<double>(x, y);
-//   complex<double>z = -1i * (2 * M_PI) * ((v * y) / N);
-//   data = exp(z) * temp;
-//   return data;
-// }
-
 double ln(double x)
 {
   double data = 0;
@@ -472,8 +463,9 @@ int main()
   string outputfilepath = "../data/output/";
   string inputstring;
   //-------Mat宣告區------------------------------------------------
-  Mat house_org(512, 512, CV_8UC1);
-  Mat city_org(512, 512, CV_8UC1);
+  Mat kirby_org(512, 512, CV_8UC1);
+  Mat flower_org(512, 512, CV_8UC1);
+  Mat temp(512, 512, CV_64FC1); 
   Mat temp_ln(512, 512, CV_64FC1);
   Mat test(512, 512, CV_64FC1);
   Mat temp_dl(512, 512, CV_64FC1);
@@ -486,222 +478,49 @@ int main()
   Mat filter_Magt(512, 512, CV_64FC1);
 
   //-------讀取檔案區------------------------------------------------
-  Read_Raw(inputfilepath + "house512.raw", rawfilebig, 512, 512);
-  for (int i = 0; i < house_org.rows; i++)
+  Read_Raw(inputfilepath + "kirby512.raw", rawfilebig, 512, 512);
+  for (int i = 0; i < kirby_org.rows; i++)
   {
-    for (int j = 0; j < house_org.cols; j++)
-      house_org.at<uchar>(i, j) = rawfilebig[i * house_org.cols + j];
+    for (int j = 0; j < kirby_org.cols; j++)
+      kirby_org.at<uchar>(i, j) = rawfilebig[i * kirby_org.cols + j];
   }
-  Read_Raw(inputfilepath + "aerialcity512.raw", rawfilebig, 512, 512);
-  for (int i = 0; i < city_org.rows; i++)
+  Read_Raw(inputfilepath + "motion_flower.raw", rawfilebig, 512, 512);
+  for (int i = 0; i < flower_org.rows; i++)
   {
-    for (int j = 0; j < city_org.cols; j++)
+    for (int j = 0; j < flower_org.cols; j++)
     {
-      city_org.at<uchar>(i, j) = rawfilebig[i * city_org.cols + j];
+      flower_org.at<uchar>(i, j) = rawfilebig[i * flower_org.cols + j];
     }
   }
 
-  imwrite(outputfilepath + "city_org.png", city_org);
+  imwrite(outputfilepath + "kirby_org.png", kirby_org);
+  imwrite(outputfilepath + "flower_org.png", flower_org); 
   while (inputstring != "quit")
   {
-    printf("please enter the question number \n enter quit to exit\n");
-    printf("menu \n 6-1 (will show the best img i think so) \n");
-    printf(" 6-2a-05  6-2a-25  6-2a-125 \n 6-2b-05  6-2b-25  6-2b-125\n");
+    // printf("please enter the question number \n enter quit to exit\n");
+    // printf("menu \n 6-1 (will show the best img i think so) \n");
+    // printf(" 6-2a-05  6-2a-25  6-2a-125 \n 6-2b-05  6-2b-25  6-2b-125\n");
     cin >> inputstring;
-    if (inputstring == "6-1")
+    if (inputstring == "test")
     {
-
-      string para;
-      imwrite(outputfilepath + "house_org.png", house_org);
-      house_org.convertTo(temp_ln, CV_64FC1, 1, 0);
-      temp_ln += Scalar(1);
-      log(temp_ln, temp_ln);
-      temp_ln = temp_ln / log(exp(1));
-      normalize(temp_ln, temp_dl, 0, 1, NORM_MINMAX);
-      temp_dl.convertTo(out, CV_8UC1, 255, 0);
-      imwrite(outputfilepath + "house_ln+norm.png", out);
-
-      DFT_time = DFT_TRANS(temp_ln, DFT_Real, DFT_Imag, "house_ln");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      para = Homofilter(DFT_Real, DFT_Imag, 0.1, 0.4, 3, 100); // 0.1,1.2,0.2,100 nice
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, "house_homo");
-      out.create(512, 512, CV_64FC1);
-      for (int x = 0; x < 512; x++)
-      {
-        for (int y = 0; y < 512; y++)
-        {
-          out.at<double>(x, y) = exp(IDFT_Real.at<double>(x, y)) - 1;
-        }
-      }
-      out.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-      imwrite(outputfilepath + "house_homo" + para + "IDFT+exp.png", out);
-      imshow("before homo filter + DFT ", DFT_Magt);
-      imshow("after homo filter + DFT", filter_Magt);
-      imshow("orgin image", house_org);
-      imshow("after homo filter + IDFT + exp ", out);
+      imshow("kirby",kirby_org);
+      waitKey(0);
+      destroyAllWindows();
+      kirby_org.convertTo(temp,CV_64FC1,(1/255.0),0);    
+      DFT_TRANS(temp,DFT_Real,DFT_Imag,inputstring);
+      //magnitude(DFT_Real,DFT_Imag,test);
+      //printf("real %f,image %f\n",DFT_Real.at<double>(274,340),DFT_Imag.at<double>(274,340));
+      // DFT_Real.at<double>(340,274)=0;
+      // DFT_Real.at<double>(175,242)=0;
+      // DFT_Imag.at<double>(340,274)=0;
+      // DFT_Imag.at<double>(175,242)=0;
+      IDFT_TRANS(DFT_Real,DFT_Imag,test,inputstring);
+      imshow("temp",temp);
+      imshow("test",test);
       waitKey(0);
       destroyAllWindows();
     }
 
-    else if (inputstring == "6-2a-05")
-    {
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      Idealfilter(DFT_Real, DFT_Imag, 5, 0);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-
-      imwrite(outputfilepath + "city_ILPF_d0=5_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("ILPF,d0=5, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-      waitKey(0);
-      destroyAllWindows();
-    }
-    else if (inputstring == "6-2a-25")
-    {
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      Idealfilter(DFT_Real, DFT_Imag, 25, 0);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-
-      imwrite(outputfilepath + "city_ILPF_d0=25_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("ILPF,d0=25, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-      waitKey(0);
-      destroyAllWindows();
-    }
-    else if (inputstring == "6-2a-125")
-    {
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      Idealfilter(DFT_Real, DFT_Imag, 125, 0);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-
-      imwrite(outputfilepath + "city_ILPF_d0=125_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("ILPF,d0=125, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-      waitKey(0);
-      destroyAllWindows();
-    }
-    else if (inputstring == "6-2b-05")
-    {
-
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      GaussianFilter(DFT_Real, DFT_Imag, 5, 1);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-      imwrite(outputfilepath + "city_GHPF_d0=5_filterDFT.png", filter_Magt);
-      imwrite(outputfilepath + "city_GHPF_d0=5_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("GHPF,d0=5, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-      waitKey(0);
-      destroyAllWindows();
-    }
-    else if (inputstring == "6-2b-25")
-    {
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      GaussianFilter(DFT_Real, DFT_Imag, 25, 1);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-      imwrite(outputfilepath + "city_GHPF_d0=25_filterDFT.png", filter_Magt);
-      imwrite(outputfilepath + "city_GHPF_d0=25_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("GHPF,d0=25, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-      waitKey(0);
-      destroyAllWindows();
-    }
-    else if (inputstring == "6-2b-125")
-    {
-      double min, max;
-      city_org.convertTo(PIC_float, CV_64FC1, 1, 0);
-      normalize(PIC_float, PIC_float, 0, 1, NORM_MINMAX);
-      DFT_TRANS(PIC_float, DFT_Real, DFT_Imag, "city");
-      magnitude(DFT_Real, DFT_Imag, DFT_Magt);
-      powerLaw(DFT_Magt, 0.3);
-      GaussianFilter(DFT_Real, DFT_Imag, 125, 1);
-      magnitude(DFT_Real, DFT_Imag, filter_Magt);
-      powerLaw(filter_Magt, 0.3);
-      IDFT_TRANS(DFT_Real, DFT_Imag, IDFT_Real, inputstring);
-
-      IDFT_Real.convertTo(out, CV_8UC1, 255, 0);
-      DFT_Magt.convertTo(DFT_Magt, CV_8UC1, 255, 0);
-      filter_Magt.convertTo(filter_Magt, CV_8UC1, 255, 0);
-      imwrite(outputfilepath + "city_GHPF_d0=125_filterDFT.png", filter_Magt);
-      imwrite(outputfilepath + "city_GHPF_d0=125_IDFT.png", out);
-      imshow("before ILPF DFT", DFT_Magt);
-      imshow("after ILPF DFT", filter_Magt);
-      imshow("org", city_org);
-      imshow("after IDFT", out);
-      printf("GHPF,d0=125, ");
-      printf("MSE=%f, PSNR=%f\n", MSE(city_org, out), PSNR(city_org, out));
-
-      waitKey(0);
-      destroyAllWindows();
-    }
   }
   return 0;
 }
