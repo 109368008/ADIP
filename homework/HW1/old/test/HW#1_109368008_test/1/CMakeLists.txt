@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( HW1_2_b.cpp )
+find_package( OpenCV REQUIRED )
+add_executable( HW1_2_b HW1_2_b.cpp )
+target_link_libraries( HW1_2_b ${OpenCV_LIBS} )

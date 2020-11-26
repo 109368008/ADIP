@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "string_view": "cpp",
+        "tuple": "cpp",
+        "array": "cpp",
+        "cmath": "cpp",
+        "chrono": "cpp",
+        "algorithm": "cpp",
+        "list": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}

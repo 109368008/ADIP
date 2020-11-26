@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 2.8)
+project( HW6.cpp )
+find_package( OpenCV REQUIRED )
+add_executable( HW6 HW6.cpp )
+target_link_libraries( HW6 ${OpenCV_LIBS} )
+
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+message("OPENMP FOUND")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()

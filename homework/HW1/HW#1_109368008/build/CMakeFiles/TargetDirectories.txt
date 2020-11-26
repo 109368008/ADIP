@@ -1,0 +1,3 @@
+/home/spie/Desktop/ADIP/homework/HW#1_109368008/build/CMakeFiles/rebuild_cache.dir
+/home/spie/Desktop/ADIP/homework/HW#1_109368008/build/CMakeFiles/edit_cache.dir
+/home/spie/Desktop/ADIP/homework/HW#1_109368008/build/CMakeFiles/HW1.dir

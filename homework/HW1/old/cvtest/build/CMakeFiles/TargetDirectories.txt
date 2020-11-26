@@ -1,0 +1,3 @@
+/home/spie/Desktop/ADIP/homework/cvtest/build/CMakeFiles/rebuild_cache.dir
+/home/spie/Desktop/ADIP/homework/cvtest/build/CMakeFiles/edit_cache.dir
+/home/spie/Desktop/ADIP/homework/cvtest/build/CMakeFiles/DisplayImage.dir

@@ -1,0 +1,22 @@
+XnView sort
+city_DFT_Imag.png
+city_DFT_Magt.png
+city_DFT_Real.png
+city_GHPF_d0=5_filterDFT.png
+city_GHPF_d0=5_IDFT.png
+city_GHPF_d0=25_filterDFT.png
+city_GHPF_d0=25_IDFT.png
+city_GHPF_d0=125_IDFT.png
+city_ILPF_d0=5_IDFT.png
+city_ILPF_d0=125_IDFT.png
+city_org.png
+GaussianHPF_d0=5_DFT_filter.png
+GaussianHPF_d0=5_DFT_Magt.png
+GaussianHPF_d0=25_DFT_filter.png
+GaussianHPF_d0=25_DFT_Magt.png
+GaussianHPF_d0=125_DFT_filter.png
+GaussianHPF_d0=125_DFT_Magt.png
+idealLPF_d0=5_DFT_filter.png
+idealLPF_d0=5_DFT_Magt.png
+idealLPF_d0=125_DFT_filter.png
+idealLPF_d0=125_DFT_Magt.png
