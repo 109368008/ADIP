@@ -108,14 +108,14 @@ float DFT_TRANS(Mat inputMat, Mat outputMat1, Mat outputMat2, string name)
   }
   for (float x = 0; x < M; x++)
   {
-    #pragma omp parallel for private(data)
+#pragma omp parallel for private(data)
     for (int v = 0; v < N; v++)
     {
       data = 0;
       for (float y = 0; y < N; y++)
       {
         complex<double> temp = inputMat.at<double>(x, y);
-        complex<double>z = -1i * (2 * M_PI) * ((v * y) / N);
+        complex<double> z = -1i * (2 * M_PI) * ((v * y) / N);
         data = data + exp(z) * temp;
       }
       array[(int)(x)][(int)(v)] = data / CN;
@@ -123,7 +123,7 @@ float DFT_TRANS(Mat inputMat, Mat outputMat1, Mat outputMat2, string name)
   }
   for (float v = 0; v < N; v++)
   {
-    #pragma omp parallel for private(data)
+#pragma omp parallel for private(data)
     for (int u = 0; u < M; u++)
     {
       data = 0;
@@ -131,7 +131,7 @@ float DFT_TRANS(Mat inputMat, Mat outputMat1, Mat outputMat2, string name)
       for (float x = 0; x < M; x++)
       {
         complex<double> temp = array[(int)(x)][(int)(v)];
-        complex<double>z = -1i * (2 * M_PI) * ((u * x) / M);
+        complex<double> z = -1i * (2 * M_PI) * ((u * x) / M);
         data = data + exp(z) * temp;
       }
       outputMat1.at<double>(u, v) = data.real() / M;
@@ -191,18 +191,18 @@ float IDFT_TRANS(Mat inputMat1, Mat inputMat2, Mat outputMat, String name)
   outputMat.create(M, N, CV_64FC1);
   Mat trans(M, N, CV_64FC1);
   double comp = 0;
-  complex<double> data=0;
+  complex<double> data = 0;
   complex<double> array[M][N] = {0};
   for (int u = 0; u < M; u++)
   {
-    #pragma omp parallel for private(data)
+#pragma omp parallel for private(data)
     for (int y = 0; y < N; y++)
     {
       data = 0;
       for (float v = 0; v < N; v++)
       {
         complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
-        complex<double>z = 1i * (2 * M_PI) * ((v * y) / N);
+        complex<double> z = 1i * (2 * M_PI) * ((v * y) / N);
         data = data + exp(z) * temp;
       }
       array[u][(int)(y)] = data; // * pow((-1), (x + y)
@@ -210,14 +210,14 @@ float IDFT_TRANS(Mat inputMat1, Mat inputMat2, Mat outputMat, String name)
   }
   for (int y = 0; y < M; y++)
   {
-    #pragma omp parallel for private(data)
+#pragma omp parallel for private(data)
     for (int x = 0; x < M; x++)
     {
       data = 0;
       for (float u = 0; u < N; u++)
       {
         complex<double> temp = array[(int)(u)][y];
-        complex<double>z = 1i * (2 * M_PI) * ((u * x) / M);
+        complex<double> z = 1i * (2 * M_PI) * ((u * x) / M);
         data = data + exp(z) * temp;
       }
       outputMat.at<double>(x, y) = data.real() * pow((-1), (x + y));
@@ -449,7 +449,7 @@ string Homofilter(Mat inputMat1, Mat inputMat2, double rL, double rH, double c, 
   imwrite(name, outputMat1);
   return para;
 }
-void BandRejectFilter(Mat inputMat1, Mat inputMat2,int d0,int w)
+void BandRejectFilter(Mat inputMat1, Mat inputMat2, int d0, int w, string inputstr)
 {
   string outputfilepath = "../data/output/";
   string name;
@@ -466,18 +466,18 @@ void BandRejectFilter(Mat inputMat1, Mat inputMat2,int d0,int w)
     {
       complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
       double dis = sqrt(pow(u - (M / 2.0), 2) + pow(v - (N / 2.0), 2)); //,pow(u-(M/2.0),2)+pow(v-(N/2.0),2)
-      if(dis<d0-(w/2.0))
+      if (dis < d0 - (w / 2.0))
       {
-        B=1;
+        B = 1;
       }
-      else if((d0-(w/2.0))<=dis && dis<=(d0+(w/2.0)))
+      else if ((d0 - (w / 2.0)) <= dis && dis <= (d0 + (w / 2.0)))
       {
-        B=0;
-        printf("%f\n",B.real());
+        B = 0;
+        printf("%f\n", B.real());
       }
-      else if(dis>d0+(w/2.0))
+      else if (dis > d0 + (w / 2.0))
       {
-        B=1;
+        B = 1;
       }
       temp = temp * B;
       display1.at<uchar>(u, v) = B.real() * 255;
@@ -488,9 +488,96 @@ void BandRejectFilter(Mat inputMat1, Mat inputMat2,int d0,int w)
   }
   powerLaw(outputMat1, 0.3);
   outputMat1.convertTo(outputMat1, CV_8UC1, 255, 0);
-  name = outputfilepath + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_filter.png";
+  name = outputfilepath + inputstr + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_filter.png";
   imwrite(name, display1);
-  name = outputfilepath + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_Magt.png";
+  name = outputfilepath + inputstr + "ideal" + F + "_d0=" + to_string(d0) + "_DFT_Magt.png";
+  imwrite(name, outputMat1);
+}
+void NotchFilter(Mat inputMat1, Mat inputMat2, int d0, int u0, int v0, string inputname, string inputstr)
+{
+  string outputfilepath = "../data/output/";
+  string name;
+  string F;
+  int M = inputMat1.rows;
+  int N = inputMat1.cols;
+  Mat outputMat1(M, N, CV_64FC1);
+  Mat display1(M, N, CV_8UC1);
+  complex<double> G = 0;
+
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
+      double duv1 = sqrt(pow(u - (M / 2.0) - u0, 2) + pow(v - (N / 2.0) - v0, 2)); //,pow(u-(M/2.0),2)+pow(v-(N/2.0),2)
+      double duv2 = sqrt(pow(u - (M / 2.0) + u0, 2) + pow(v - (N / 2.0) + v0, 2));
+      G = 1 - (exp(-0.5 * ((duv1 * duv2) / pow(d0, 2))) * 0.95);
+      temp = temp * G;
+      display1.at<uchar>(u, v) = G.real() * 255;
+      inputMat1.at<double>(u, v) = temp.real();
+      inputMat2.at<double>(u, v) = temp.imag();
+      outputMat1.at<double>(u, v) = sqrt(pow(temp.real(), 2) + pow(temp.imag(), 2));
+    }
+  }
+  powerLaw(outputMat1, 0.3);
+  outputMat1.convertTo(outputMat1, CV_8UC1, 255, 0);
+  name = outputfilepath + inputstr + "gaussian" + F + "_d0=" + to_string(d0) + "_DFT_" + inputname + ".png";
+  imwrite(name, display1);
+  name = outputfilepath + inputstr + "gaussian" + F + "_d0=" + to_string(d0) + "_DFT_" + inputname + "_Magt.png";
+  imwrite(name, outputMat1);
+}
+void Gaussian1D(Mat inputMat1, Mat inputMat2, double sig, int xy, int mode, double amp, int d0, string inputname, string inputstr)
+{
+  string outputfilepath = "../data/output/";
+  string name;
+  string F;
+  int M = inputMat1.rows;
+  int N = inputMat1.cols;
+  Mat outputMat1(M, N, CV_64FC1);
+  Mat display1(M, N, CV_8UC1);
+  complex<double> G = 0;
+  double duv1;
+  double duv2;
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
+      double dis = sqrt(pow(u - (M / 2.0), 2) + pow(v - (N / 2.0), 2)); //,pow(u-(M/2.0),2)+pow(v-(N/2.0),2)
+      if (dis < d0)
+      {
+        G = 1;
+      }
+      else if (dis > d0)
+      {
+        if (mode == 0)
+        {
+          duv1 = (u - (M / 2) + xy);
+          duv2 = (u - (M / 2) - xy);
+          F = "Y";
+        }
+        else if (mode == 1)
+        {
+          duv1 = (v - (N / 2) + xy);
+          duv2 = (v - (N / 2) - xy);
+          F = "X";
+        }
+        G = 1 - ((exp((duv1 * duv1) / ((-2) * pow(sig, 2)))) * amp); //((sig * sqrt(2 * M_PI)) *
+        G = G * (1 - ((exp((duv2 * duv2) / ((-2) * pow(sig, 2)))) * amp));
+      }
+
+      temp = temp * G;
+      display1.at<uchar>(u, v) = G.real() * 255;
+      inputMat1.at<double>(u, v) = temp.real();
+      inputMat2.at<double>(u, v) = temp.imag();
+      outputMat1.at<double>(u, v) = sqrt(pow(temp.real(), 2) + pow(temp.imag(), 2));
+    }
+  }
+  powerLaw(outputMat1, 0.3);
+  outputMat1.convertTo(outputMat1, CV_8UC1, 255, 0);
+  name = outputfilepath + inputstr + "gaussian1D_" + F + "_sig=" + to_string(sig) + "_DFT_" + inputname + ".png";
+  imwrite(name, display1);
+  name = outputfilepath + inputstr + "gaussian1D_" + F + "_sig=" + to_string(sig) + "_DFT_" + inputname + "_Magt.png";
   imwrite(name, outputMat1);
 }
 
@@ -510,7 +597,7 @@ int main()
   //-------Mat宣告區------------------------------------------------
   Mat kirby_org(512, 512, CV_8UC1);
   Mat flower_org(512, 512, CV_8UC1);
-  Mat temp(512, 512, CV_64FC1); 
+  Mat temp(512, 512, CV_64FC1);
   Mat temp_ln(512, 512, CV_64FC1);
   Mat test(512, 512, CV_64FC1);
   Mat temp_dl(512, 512, CV_64FC1);
@@ -539,34 +626,51 @@ int main()
   }
 
   imwrite(outputfilepath + "kirby_org.png", kirby_org);
-  imwrite(outputfilepath + "flower_org.png", flower_org); 
+  imwrite(outputfilepath + "flower_org.png", flower_org);
   while (inputstring != "quit")
   {
     // printf("please enter the question number \n enter quit to exit\n");
     // printf("menu \n 6-1 (will show the best img i think so) \n");
     // printf(" 6-2a-05  6-2a-25  6-2a-125 \n 6-2b-05  6-2b-25  6-2b-125\n");
     cin >> inputstring;
-    if (inputstring == "test")
+    if (inputstring == "7-1b")
     {
-      imshow("kirby",kirby_org);
+      imshow("kirby", kirby_org);
       waitKey(0);
       destroyAllWindows();
-      kirby_org.convertTo(temp,CV_64FC1,(1/255.0),0);    
-      DFT_TRANS(temp,DFT_Real,DFT_Imag,inputstring);
-      //magnitude(DFT_Real,DFT_Imag,test);
-      //printf("real %f,image %f\n",DFT_Real.at<double>(274,340),DFT_Imag.at<double>(274,340));
-      // DFT_Real.at<double>(340,274)=0;
-      // DFT_Real.at<double>(175,242)=0;
-      // DFT_Imag.at<double>(340,274)=0;
-      // DFT_Imag.at<double>(175,242)=0;
-      BandRejectFilter(DFT_Real,DFT_Imag,83,7);
-      IDFT_TRANS(DFT_Real,DFT_Imag,test,inputstring);
-      imshow("temp",temp);
-      imshow("test",test);
+      kirby_org.convertTo(temp, CV_64FC1, (1 / 255.0), 0);
+      DFT_TRANS(temp, DFT_Real, DFT_Imag, inputstring);
+      BandRejectFilter(DFT_Real, DFT_Imag, 83, 7, inputstring);
+      IDFT_TRANS(DFT_Real, DFT_Imag, test, inputstring);
+      imshow("temp", temp);
+      imshow("test", test);
       waitKey(0);
       destroyAllWindows();
     }
+    else if (inputstring == "7-2")
+    {
 
+    }
+    else if (inputstring == "7-1a")
+    {
+      imshow("kirby", kirby_org);
+      waitKey(0);
+      destroyAllWindows();
+      kirby_org.convertTo(temp, CV_64FC1, (1 / 255.0), 0);
+      DFT_TRANS(temp, DFT_Real, DFT_Imag, inputstring);
+      Gaussian1D(DFT_Real, DFT_Imag, 3, 16, 0, 0.8, 70, "filter1", inputstring);
+      Gaussian1D(DFT_Real, DFT_Imag, 3, 17, 0, 0.85, 40, "filter2", inputstring);
+      Gaussian1D(DFT_Real, DFT_Imag, 2, 81, 1, 0.94, 50, "filter3", inputstring);
+      //Gaussian1D(DFT_Real,DFT_Imag,4,82,1,0.8,100);
+      NotchFilter(DFT_Real, DFT_Imag, 40, 272 - 256, 337 - 256, "filter4", inputstring);
+      IDFT_TRANS(DFT_Real, DFT_Imag, test, inputstring);
+      imshow("temp", temp);
+      imshow("test", test);
+      test.convertTo(test, CV_8UC1, 255, 0);
+      imwrite(outputfilepath + "kirby_notchfilter.png", test);
+      waitKey(0);
+      destroyAllWindows();
+    }
   }
   return 0;
 }
