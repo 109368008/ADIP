@@ -221,6 +221,7 @@ float IDFT_TRANS(Mat inputMat1, Mat inputMat2, Mat outputMat, String name)
         data = data + exp(z) * temp;
       }
       outputMat.at<double>(x, y) = data.real() * pow((-1), (x + y));
+      //outputMat.at<double>(x, y) = data.real();
     }
   }
   //trans.convertTo(outputMat, CV_64FC1, 1, 0);
@@ -580,6 +581,127 @@ void Gaussian1D(Mat inputMat1, Mat inputMat2, double sig, int xy, int mode, doub
   name = outputfilepath + inputstr + "gaussian1D_" + F + "_sig=" + to_string(sig) + "_DFT_" + inputname + "_Magt.png";
   imwrite(name, outputMat1);
 }
+void myflip(Mat inputMat1)
+{
+  int M = inputMat1.rows;
+  int N = inputMat1.cols;
+  Mat temp1(M,N,CV_64FC1);
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      if(u<256)
+      {
+        if(v<256)
+        {
+          temp1.at<double>(u,v)=inputMat1.at<double>(u+256,v+256);
+        }
+        else
+        {
+          temp1.at<double>(u,v)=inputMat1.at<double>(u+256,v-256);
+        }    
+      }
+      else
+      {
+        if(v<256)
+        {
+          temp1.at<double>(u,v)=inputMat1.at<double>(u-256,v+256);
+        }
+        else
+        {
+          temp1.at<double>(u,v)=inputMat1.at<double>(u-256,v-256);
+        }    
+      }
+    }
+  }
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      inputMat1.at<double>(u,v)=temp1.at<double>(u,v);
+    }
+  }
+
+}
+void InverseFilter(Mat inputMat1, Mat inputMat2, double a, string inputstr,double sig)
+{
+  string outputfilepath = "../data/output/";
+  string name;
+  string F;
+  int M = inputMat1.rows;
+  int N = inputMat1.cols;
+  Mat outputMat1(M, N, CV_64FC1);
+  Mat display1(M, N, CV_8UC1);
+  Mat trans1_H(M, N, CV_64FC1);
+  Mat trans2_R(M, N, CV_64FC1);
+  Mat trans2_I(M, N, CV_64FC1);
+  complex<double> H = 0;
+  double duv1;
+  double duv2;
+  double owm;
+  double mag;
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      //double sig=0.4;
+      owm = M_PI * u * a;
+      complex<double> e = -1i * owm ;
+      H = (1 / owm) * sin(owm) * exp(e);
+      mag=sqrt(pow(H.real(), 2) + pow(H.imag(), 2));
+
+      if (mag < sig)
+        mag=sig;
+
+      trans1_H.at<double>(u,v)=mag;
+      trans2_R.at<double>(u,v)=H.real();
+      trans2_I.at<double>(u,v)=H.imag();      
+
+    }
+  }
+
+
+
+  imshow("Real",trans2_R);
+  imshow("Imag",trans2_I);
+  waitKey(0);
+  destroyAllWindows();  
+
+  myflip(trans1_H);
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      if(u<255)
+      {
+        trans1_H.at<double>(u, v)=trans1_H.at<double>(511 - u,v);
+      }
+      if(u==255 || u==256)
+      {
+        trans1_H.at<double>(u, v)=trans1_H.at<double>(257, v);
+        //printf("255 = %f\n",trans1_H.at<double>(u, v));
+      }
+    }
+  }
+  for (int u = 0; u < M; u++)
+  {
+    for (int v = 0; v < N; v++)
+    {
+      complex<double> temp = {inputMat1.at<double>(u, v), inputMat2.at<double>(u, v)};
+      inputMat1.at<double>(u, v) = temp.real()/trans1_H.at<double>(u, v);
+      inputMat2.at<double>(u, v) = temp.imag()/trans1_H.at<double>(u, v);
+      outputMat1.at<double>(u, v) = sqrt(pow(inputMat1.at<double>(u, v), 2) + pow(inputMat2.at<double>(u, v), 2));
+      display1.at<uchar>(u, v) = trans1_H.at<double>(u, v) * 255;//trans1_H.at<double>(u, v)*255;//
+    }
+  }
+  powerLaw(outputMat1, 0.2);
+  outputMat1.convertTo(outputMat1, CV_8UC1, 255, 0);
+  name = outputfilepath + inputstr + "inverse" + F + "_a=" + to_string(a) + "_DFT_filter.png";
+  imwrite(name, display1);
+  name = outputfilepath + inputstr + "inverse" + F + "_a=" + to_string(a) + "_DFT_Magt.png";
+  imwrite(name, outputMat1);
+}
+
 
 //主程式開始
 int main()
@@ -647,9 +769,33 @@ int main()
       waitKey(0);
       destroyAllWindows();
     }
-    else if (inputstring == "7-2")
+    else if (inputstring == "7-2a")
     {
 
+
+      imshow("flower", flower_org);
+      waitKey(0);
+      destroyAllWindows();
+      flower_org.convertTo(temp, CV_64FC1, (1 / 255.0), 0);
+      //myflip(temp,temp_dl);
+      // imshow("temp", temp);
+      // waitKey(0);
+      // destroyAllWindows();
+      //myflip(temp,temp_dl);
+      // printf("input sig\n");
+      // char inputchar[10];
+      // cin >> inputchar;
+      // double sig = atof(inputchar);  
+      
+      DFT_TRANS(temp, DFT_Real, DFT_Imag, inputstring);
+      InverseFilter(DFT_Real, DFT_Imag, 0.01, inputstring,0.155);
+      IDFT_TRANS(DFT_Real, DFT_Imag, test, inputstring);
+      imshow("temp", temp);
+      imshow("test", test);
+      test.convertTo(out, CV_8UC1, 255, 0);
+      imwrite(outputfilepath + "flower_inverse_filter.png", out);
+      waitKey(0);
+      destroyAllWindows();
     }
     else if (inputstring == "7-1a")
     {
@@ -670,6 +816,13 @@ int main()
       imwrite(outputfilepath + "kirby_notchfilter.png", test);
       waitKey(0);
       destroyAllWindows();
+    }
+    else if(inputstring =="test")
+    {
+      char inputchar[10];
+      cin >> inputchar;
+      double yy = atof(inputchar);
+      printf("yy=%f\n",yy);
     }
   }
   return 0;
